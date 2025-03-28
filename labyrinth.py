@@ -1,13 +1,18 @@
 class Node:
-    def __init__(self, data):
+    def __init__(self, data, params=None):
         self.data = data
-        self.next = None
+        self.Entrance = None
+        self.Exit = None
+        self.Up = None
+        self.Left = None
+        self.Right = None
+        self.Down = None
 
 class LinkedList:
     def __init__(self):
         self.head = None
 
-    def append(self, data):
+    def append(self, data, direction):
         """Adds a new node with the given data at the end of the list."""
         new_node = Node(data)
         if not self.head:
