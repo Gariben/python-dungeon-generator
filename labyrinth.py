@@ -1,6 +1,6 @@
 class Room:
-    def __init__(self, data, params=None):
-        self.data = data
+    def __init__(self, number, params=None):
+        self.number = number
         self.Entrance = None
         self.Exit = None
         self.Up = None
@@ -16,6 +16,18 @@ class Room:
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
 
+    def GetRoomOptions(self):
+        if self.Up:
+            print("\tGo Up")
+        if self.Down:
+            print("\tGo Down")
+        if self.Left:
+            print("\tGo Left")
+        if self.Right:
+            print("\tGo Right")
+        if self.Entrance:
+            print("\tGo Entrance")
+
 class Dungeon:
     def __init__(self,entrance=None):
         self.room_list = []
@@ -24,29 +36,74 @@ class Dungeon:
         self.room_list.append(self.entrance)
         self.current_room = self.entrance
         self.exit = self.entrance
+        self.grid = None
 
-    def entrance(self):
-        return self.head
+    def GetEntrance(self):
+        return self.entrance
+    
+    def GetCurrentRoom(self):
+        return self.current_room
 
-    def exit(self):
+    def GetExit(self):
         return self.exit
+    
+    def SetExit(self, room):
+        self.exit.Exit = False
+        room.Exit = True
+        self.exit = room
+
+    def UpdateGrid(self):
+        self.grid = None
+        coordinates_list = []
+        for room in self.room_list:
+            if room.coordinates:
+                coordinates_list.append(room.coordinates)
+        min_x = min(coord[0] for coord in coordinates_list)
+        max_x = max(coord[0] for coord in coordinates_list)
+        min_y = min(coord[1] for coord in coordinates_list)
+        max_y = max(coord[1] for coord in coordinates_list)
+
+
+        for y in range(min_y, max_y + 1):
+            row = []
+            for x in range(min_x, max_x + 1):
+                if (x, y) in coordinates_list:
+                    row.append(room)
+
 
     def append(self, room, direction, new_room=None):
         """Adds a new node with the given data at the end of the list."""
         """Returns the current room"""
+
         if new_room is None:
-            new_room = Room()
+            new_room_params= {}
+            # TODO: Should exit automatically change to second room?
+            #if self.entrance == self.exit:
+            #    self.entrance
+            #    new_room_params["Exit"] = True
+            new_room = Room(len(self.room_list), new_room_params)
 
         if direction == "Up":
             room.Up = new_room
+            new_room.set_coordinates((room.coordinates[0], room.coordinates[1] - 1))
+            new_room.Down = room
         elif direction == "Down":
             room.Down = new_room
+            new_room.set_coordinates((room.coordinates[0], room.coordinates[1] + 1))
+            new_room.Up = room
         elif direction == "Left":
             room.Left = new_room
+            new_room.set_coordinates((room.coordinates[0] - 1, room.coordinates[1]))
+            new_room.Right = room
         elif direction == "Right":
             room.Right = new_room
+            new_room.set_coordinates((room.coordinates[0] + 1, room.coordinates[1]))
+            new_room.Left = room
         else:
             raise ValueError("Invalid direction")
+        
+
+        self.room_list.append(new_room)
 
         return new_room
 
@@ -101,7 +158,8 @@ class Dungeon:
         #temp = temp.next
         #return " -> ".join(values)
     
-    def print_by_room(self):
+    def print_by_room(self, pretty=False):
+        if pretty: print("Printing Dungeon by rooms generated:")
         for room in self.room_list:
             nsew_list = [1 if room.Up else 0,
                         1 if room.Down else 0,
@@ -110,14 +168,18 @@ class Dungeon:
             params = []
             if room.Entrance: params.append("Entrance")
             if room.Exit: params.append("Exit")
-            print(f"Room {room.data}: {nsew_list} {params if params else ''}")
+            print(f"Room {room.number}: {nsew_list} {params if params else ''}")
+        if pretty: print("")
 
 # Example usage
 if __name__ == "__main__":
     labyrinth = Dungeon()
-    labyrinth.print_by_room()
+    labyrinth.print_by_room(pretty=True)
     
-    #labyrinth.append(labyrinth.entrance(), "Up")
+    room = labyrinth.append(labyrinth.GetCurrentRoom(), "Up")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+
     #ll.append(2)
     #ll.append(3)
     #print("Linked List:", ll)
