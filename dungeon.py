@@ -43,7 +43,7 @@ class Room:
         params = []
         if self.Entrance: params.append("Entrance")
         if self.Exit: params.append("Exit")
-        print(f"Room {self.number}: {self.coordinates}\t{nsew_list} {params if params else ''}")
+        print(f"Room {self.number}: {self.coordinates}\t\t{nsew_list} {params if params else ''}")
 
 
 class Floor:
@@ -171,7 +171,7 @@ class Floor:
     
     def print_by_room(self, pretty=False):
         if pretty: print("Printing Floor by rooms generated:")
-        if pretty: print("Room N: " + "(X, Y)\t[ N    S    E    W ] [Parameters]")
+        if pretty: print("Room N: " + "(X, Y)\t\t[ N    S    E    W ] [Parameters]")
         for room in self.room_list:
             room.print_data()
         if pretty: print("")
@@ -191,6 +191,8 @@ class Floor:
                         print("X", end=endchar)
                     else:
                         print("O", end=endchar)
+                else:
+                    print(" ", end=" ")
             print()
             for x in range(self.min[0], self.max[0]+1):
                 if (x, y) in self.grid:
@@ -199,6 +201,8 @@ class Floor:
                         print("|", end=" ")
                     else:
                         print(" ", end=" ")
+                else:
+                    print(" ", end=" ")
             print()
 
 if __name__ == "__main__":
@@ -226,7 +230,26 @@ if __name__ == "__main__":
     room = labyrinth.append(room, "Up")
     labyrinth.SetExit(room)
     labyrinth.print_by_room(pretty=True)
-    print ("This one's busted.")
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Left")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Left")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Left")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Down")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
     labyrinth.print_simple_map()
 
     #ll.append(2)
