@@ -1,3 +1,19 @@
+def text_indent(tabs):
+    print(" " * tabs, end="")
+
+def GetRoomOptions(self):
+    if self.Up:
+        print("\tGo Up")
+    if self.Down:
+        print("\tGo Down")
+    if self.Left:
+        print("\tGo Left")
+    if self.Right:
+        print("\tGo Right")
+    if self.Entrance:
+        print("\tGo Entrance")
+
+
 class Room:
     def __init__(self, number, params=None):
         self.number = number
@@ -13,30 +29,35 @@ class Room:
             self.Entrance = params.get("Entrance")
             self.Exit = params.get("Exit")
 
+    def get_number(self):
+        return self.number
+
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
+    
+    def print_data(self):
+        nsew_list = [str(self.Up.get_number()) if self.Up else "X",
+                    str(self.Down.get_number()) if self.Down else "X",
+                    str(self.Left.get_number()) if self.Left else "X",
+                    str(self.Right.get_number()) if self.Right else "X"]
+        params = []
+        if self.Entrance: params.append("Entrance")
+        if self.Exit: params.append("Exit")
+        print(f"Room {self.number}: {nsew_list} {params if params else ''}")
 
-    def GetRoomOptions(self):
-        if self.Up:
-            print("\tGo Up")
-        if self.Down:
-            print("\tGo Down")
-        if self.Left:
-            print("\tGo Left")
-        if self.Right:
-            print("\tGo Right")
-        if self.Entrance:
-            print("\tGo Entrance")
 
-class Dungeon:
+class Floor:
     def __init__(self,entrance=None):
+        self.grid = {}
         self.room_list = []
         self.entrance = Room(len(self.room_list), {"Entrance": True, "Exit": True})
         self.entrance.set_coordinates((0, 0))
+        self.min = (0,0)
+        self.max = (0,0)
+        self.grid[self.entrance.coordinates] = self.entrance
         self.room_list.append(self.entrance)
         self.current_room = self.entrance
         self.exit = self.entrance
-        self.grid = None
 
     def GetEntrance(self):
         return self.entrance
@@ -51,25 +72,6 @@ class Dungeon:
         self.exit.Exit = False
         room.Exit = True
         self.exit = room
-
-    def UpdateGrid(self):
-        self.grid = None
-        coordinates_list = []
-        for room in self.room_list:
-            if room.coordinates:
-                coordinates_list.append(room.coordinates)
-        min_x = min(coord[0] for coord in coordinates_list)
-        max_x = max(coord[0] for coord in coordinates_list)
-        min_y = min(coord[1] for coord in coordinates_list)
-        max_y = max(coord[1] for coord in coordinates_list)
-
-
-        for y in range(min_y, max_y + 1):
-            row = []
-            for x in range(min_x, max_x + 1):
-                if (x, y) in coordinates_list:
-                    row.append(room)
-
 
     def append(self, room, direction, new_room=None):
         """Adds a new node with the given data at the end of the list."""
@@ -102,7 +104,16 @@ class Dungeon:
         else:
             raise ValueError("Invalid direction")
         
-
+        if new_room.coordinates[0] < self.min[0]:
+            self.min = (new_room.coordinates[0], self.min[1])
+        if new_room.coordinates[0] > self.max[0]:
+            self.max = (new_room.coordinates[0], self.max[1])
+        if new_room.coordinates[1] < self.min[1]:
+            self.min = (self.min[0], new_room.coordinates[1])
+        if new_room.coordinates[1] > self.max[1]:
+            self.max = (self.max[0], new_room.coordinates[1])
+        
+        self.grid[new_room.coordinates] = new_room
         self.room_list.append(new_room)
 
         return new_room
@@ -159,26 +170,51 @@ class Dungeon:
         #return " -> ".join(values)
     
     def print_by_room(self, pretty=False):
-        if pretty: print("Printing Dungeon by rooms generated:")
+        if pretty: print("Printing Floor by rooms generated:")
+        if pretty: print("        [ N    S    E    W] ")
         for room in self.room_list:
-            nsew_list = [1 if room.Up else 0,
-                        1 if room.Down else 0,
-                        1 if room.Left else 0,
-                        1 if room.Right else 0]
-            params = []
-            if room.Entrance: params.append("Entrance")
-            if room.Exit: params.append("Exit")
-            print(f"Room {room.number}: {nsew_list} {params if params else ''}")
+            room.print_data()
         if pretty: print("")
+
+    def print_map(self, indent=2):
+        #text_indent(indent)
+        #print("* " * ((self.max[1]+2)-self.min[1]), end=" ")
+        #print()
+
+        for y in range(self.min[1], self.max[1]+1):
+            for x in range(self.min[0], self.max[0]+1):
+                #text_indent(indent)
+                #print("*", end=" ")
+                if (x, y) in self.grid:
+                    room = self.grid[(x, y)]
+                    if room.Entrance:
+                        print("E", end=" ")
+                    elif room.Exit:
+                        print("X", end=" ")
+                    else:
+                        print("O", end=" ")
+                print()
+
+        #print("* " * ((self.max[1]+2)-self.min[1]), end=" ")
+        #print()
 
 # Example usage
 if __name__ == "__main__":
-    labyrinth = Dungeon()
+    labyrinth = Floor()
     labyrinth.print_by_room(pretty=True)
     
     room = labyrinth.append(labyrinth.GetCurrentRoom(), "Up")
     labyrinth.SetExit(room)
     labyrinth.print_by_room(pretty=True)
+    labyrinth.print_map()
+
+    print("Current Room:")
+    room.print_data()
+
+    room = labyrinth.append(labyrinth.GetCurrentRoom(), "Right")
+    #labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    labyrinth.print_map()
 
     #ll.append(2)
     #ll.append(3)
