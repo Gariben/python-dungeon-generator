@@ -177,16 +177,28 @@ class Floor:
         if pretty: print("")
 
     def print_simple_map(self, indent=2):
+        print("Simple Map:")
         for y in range(self.min[1], self.max[1]+1):
             for x in range(self.min[0], self.max[0]+1):
                 if (x, y) in self.grid:
+                    endchar=" "
                     room = self.grid[(x, y)]
+                    if room.Right:
+                        endchar="-"
                     if room.Entrance:
-                        print("E", end=" ")
+                        print("E", end=endchar)
                     elif room.Exit:
-                        print("X", end=" ")
+                        print("X", end=endchar)
                     else:
-                        print("O", end=" ")
+                        print("O", end=endchar)
+            print()
+            for x in range(self.min[0], self.max[0]+1):
+                if (x, y) in self.grid:
+                    room = self.grid[(x, y)]
+                    if room.Down:
+                        print("|", end=" ")
+                    else:
+                        print(" ", end=" ")
             print()
 
 if __name__ == "__main__":
@@ -201,9 +213,20 @@ if __name__ == "__main__":
     print("Current Room:")
     room.print_data()
 
-    room = labyrinth.append(labyrinth.GetCurrentRoom(), "Right")
-    #labyrinth.SetExit(room)
+    room = labyrinth.append(room, "Right")
+    labyrinth.SetExit(room)
     labyrinth.print_by_room(pretty=True)
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Right")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    labyrinth.print_simple_map()
+
+    room = labyrinth.append(room, "Up")
+    labyrinth.SetExit(room)
+    labyrinth.print_by_room(pretty=True)
+    print ("This one's busted.")
     labyrinth.print_simple_map()
 
     #ll.append(2)
