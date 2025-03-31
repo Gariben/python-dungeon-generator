@@ -1,19 +1,6 @@
 def text_indent(tabs):
     print(" " * tabs, end="")
 
-def GetRoomOptions(self):
-    if self.Up:
-        print("\tGo Up")
-    if self.Down:
-        print("\tGo Down")
-    if self.Left:
-        print("\tGo Left")
-    if self.Right:
-        print("\tGo Right")
-    if self.Entrance:
-        print("\tGo Entrance")
-
-
 class Room:
     def __init__(self, number, params=None):
         self.number = number
