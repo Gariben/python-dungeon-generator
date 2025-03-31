@@ -24,6 +24,8 @@ class Room:
         self.Right = None
         self.Down = None
         self.coordinates = None
+        self.locked_behind= None
+        self.contains = None
 
         if params is not None:
             self.Entrance = params.get("Entrance")
@@ -47,7 +49,7 @@ class Room:
 
 
 class Floor:
-    def __init__(self,entrance=None):
+    def __init__(self,layout_list=None,entrance=None, exit=None):
         self.grid = {}
         self.room_list = []
         self.entrance = Room(len(self.room_list), {"Entrance": True, "Exit": True})
@@ -59,11 +61,35 @@ class Floor:
         self.current_room = self.entrance
         self.exit = self.entrance
 
+        if layout_list:
+            for direction in layout_list:
+                room = self.append(self.current_room, direction)
+                if room:
+                    self.current_room = room
+
+        if entrance:
+            self.room_list[entrance].Entrance = True
+            self.entrance = self.room_list[entrance]
+        if exit:
+            self.room_list[exit].Exit = True
+            self.exit = self.room_list[exit]
+
+
     def GetEntrance(self):
         return self.entrance
     
     def GetCurrentRoom(self):
         return self.current_room
+    
+    def get_room(self, reference):
+        if type(reference) == int:
+            return self.room_list[reference]
+        elif type(reference) == tuple:
+            return self.grid.get(reference)
+        elif type(reference) == Room:
+            return reference
+        else:
+            raise ValueError("Invalid reference type. Must be int, tuple, or Room instance.")
 
     def GetExit(self):
         return self.exit
@@ -73,48 +99,52 @@ class Floor:
         room.Exit = True
         self.exit = room
 
-    def append(self, room, direction, new_room=None):
+    def append(self, room, direction):
         """Adds a new node with the given data at the end of the list."""
         """Returns the current room"""
-
-        if new_room is None:
-            new_room_params= {}
-            # TODO: Should exit automatically change to second room?
-            #if self.entrance == self.exit:
-            #    self.entrance
-            #    new_room_params["Exit"] = True
-            new_room = Room(len(self.room_list), new_room_params)
+        new_room = None
 
         if direction == "Up":
-            room.Up = new_room
-            new_room.set_coordinates((room.coordinates[0], room.coordinates[1] - 1))
-            new_room.Down = room
+            if room.Up is None:
+                new_room = Room(len(self.room_list))
+                room.Up = new_room
+                new_room.set_coordinates((room.coordinates[0], room.coordinates[1] - 1))
+                new_room.Down = room
+                #if self.get_room((room.coordinates[0], room.coordinates[1] - 1)):
+                #    self.connect_rooms
+                #    self.current_room = self.get_room((room.coordinates[0], room.coordinates[1] - 1))
         elif direction == "Down":
-            room.Down = new_room
-            new_room.set_coordinates((room.coordinates[0], room.coordinates[1] + 1))
-            new_room.Up = room
+            if room.Down is None:
+                new_room = Room(len(self.room_list))
+                room.Down = new_room
+                new_room.set_coordinates((room.coordinates[0], room.coordinates[1] + 1))
+                new_room.Up = room
         elif direction == "Left":
-            room.Left = new_room
-            new_room.set_coordinates((room.coordinates[0] - 1, room.coordinates[1]))
-            new_room.Right = room
+            if room.Left is None:
+                new_room = Room(len(self.room_list))
+                room.Left = new_room
+                new_room.set_coordinates((room.coordinates[0] - 1, room.coordinates[1]))
+                new_room.Right = room
         elif direction == "Right":
-            room.Right = new_room
-            new_room.set_coordinates((room.coordinates[0] + 1, room.coordinates[1]))
-            new_room.Left = room
+            if room.Right is None:
+                new_room = Room(len(self.room_list))
+                room.Right = new_room
+                new_room.set_coordinates((room.coordinates[0] + 1, room.coordinates[1]))
+                new_room.Left = room
         else:
             raise ValueError("Invalid direction")
         
-        if new_room.coordinates[0] < self.min[0]:
-            self.min = (new_room.coordinates[0], self.min[1])
-        if new_room.coordinates[0] > self.max[0]:
-            self.max = (new_room.coordinates[0], self.max[1])
-        if new_room.coordinates[1] < self.min[1]:
-            self.min = (self.min[0], new_room.coordinates[1])
-        if new_room.coordinates[1] > self.max[1]:
-            self.max = (self.max[0], new_room.coordinates[1])
-        
-        self.grid[new_room.coordinates] = new_room
-        self.room_list.append(new_room)
+        if new_room:
+            if new_room.coordinates[0] < self.min[0]:
+                self.min = (new_room.coordinates[0], self.min[1])
+            if new_room.coordinates[0] > self.max[0]:
+                self.max = (new_room.coordinates[0], self.max[1])
+            if new_room.coordinates[1] < self.min[1]:
+                self.min = (self.min[0], new_room.coordinates[1])
+            if new_room.coordinates[1] > self.max[1]:
+                self.max = (self.max[0], new_room.coordinates[1]) 
+            self.grid[new_room.coordinates] = new_room
+            self.room_list.append(new_room)
 
         return new_room
 
@@ -206,61 +236,7 @@ class Floor:
             print()
 
 if __name__ == "__main__":
-    labyrinth = Floor()
-    labyrinth.print_by_room(pretty=True)
-    
-    room = labyrinth.append(labyrinth.GetCurrentRoom(), "Up")
-    labyrinth.SetExit(room)
+    layout_list = ["Up", "Right", "Right", "Up", "Left", "Left", "Left", "Down"]
+    labyrinth = Floor(layout_list, 0, len(layout_list))
     labyrinth.print_by_room(pretty=True)
     labyrinth.print_simple_map()
-
-    print("Current Room:")
-    room.print_data()
-
-    room = labyrinth.append(room, "Right")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Right")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Up")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Left")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Left")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Left")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    room = labyrinth.append(room, "Down")
-    labyrinth.SetExit(room)
-    labyrinth.print_by_room(pretty=True)
-    labyrinth.print_simple_map()
-
-    #ll.append(2)
-    #ll.append(3)
-    #print("Linked List:", ll)
-    
-    #ll.prepend(0)
-    #print("After Prepending 0:", ll)
-    
-    #ll.delete(2)
-    #print("After Deleting 2:", ll)
-    
-    #ll.reverse()
-    #print("After Reversing:", ll)
