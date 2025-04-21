@@ -1,11 +1,13 @@
+import argparse
+
 def text_indent(tabs):
     print(" " * tabs, end="")
 
 class Room:
     def __init__(self, number, params=None):
         self.number = number
-        self.Entrance = None
-        self.Exit = None
+        self.Entrance = False
+        self.Exit = False
         self.Up = None
         self.Left = None
         self.Right = None
@@ -23,6 +25,12 @@ class Room:
 
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
+
+    def SetEntrance(self, bool):
+        self.exit = bool
+
+    def SetExit(self, bool):
+        self.exit = bool
     
     def print_data(self):
         nsew_list = [str(self.Up.get_number()) if self.Up else "X",
@@ -41,12 +49,12 @@ class Floor:
         self.room_list = []
         self.entrance = Room(len(self.room_list), {"Entrance": True, "Exit": True})
         self.entrance.set_coordinates((0, 0))
+        self.exit = self.entrance
         self.min = (0,0)
         self.max = (0,0)
         self.grid[self.entrance.coordinates] = self.entrance
         self.room_list.append(self.entrance)
         self.current_room = self.entrance
-        self.exit = self.entrance
 
         if layout_list:
             for direction in layout_list:
@@ -55,16 +63,23 @@ class Floor:
                     self.current_room = room
 
         if entrance:
+            self.SetEntrance(self.room_list[entrance])
             self.room_list[entrance].Entrance = True
             self.entrance = self.room_list[entrance]
         if exit:
-            self.room_list[exit].Exit = True
-            self.exit = self.room_list[exit]
+            self.SetExit(self.room_list[exit])
 
 
     def GetEntrance(self):
         return self.entrance
     
+    def SetEntrance(self, room):
+        if self.entrance:
+            self.entrance.Entrance = False
+            self.entrance = None
+        room.Entrance = True
+        self.entrance = room
+
     def GetCurrentRoom(self):
         return self.current_room
     
@@ -82,7 +97,9 @@ class Floor:
         return self.exit
     
     def SetExit(self, room):
-        self.exit.Exit = False
+        if self.exit:
+            self.exit.Exit = False
+            self.exit = None
         room.Exit = True
         self.exit = room
 
@@ -223,7 +240,20 @@ class Floor:
             print()
 
 if __name__ == "__main__":
-    layout_list = ["Up", "Right", "Right", "Up", "Left", "Left", "Left", "Down"]
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description="Generate a dungeon layout.")
+    parser.add_argument(
+        "--layout",
+        type=str,
+        default="Up",
+        help="Comma-separated list of directions for the dungeon layout (e.g., 'Up,Right,Left')."
+    )
+    args = parser.parse_args()
+
+    # Parse the layout argument into a list
+    layout_list = args.layout.split(",")
+
+    # Create the labyrinth and print it
     labyrinth = Floor(layout_list, 0, len(layout_list))
     labyrinth.print_by_room(pretty=True)
     labyrinth.print_simple_map()
